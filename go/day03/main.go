@@ -33,10 +33,6 @@ type Statement struct {
 	Active bool
 }
 
-// Really janky, but just splitting a new parser off when we find a 'do()' or 'dont()' line, discarding the don't lines
-// func (p *Parser) SplitParser() []Parser {
-// }
-
 func (p *Parser) SolveMultStatements() int {
 	sum := 0
 	for _, statement := range p.statements {
