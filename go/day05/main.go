@@ -20,8 +20,8 @@ func main() {
 }
 
 func Part2() {
+	rules, updates, err := ReadInput("./input.txt")
 	// rules, updates, err := ReadInput("./test_input.txt")
-	rules, updates, err := ReadInput("./test_input.txt")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -38,30 +38,47 @@ func Part2() {
 	}
 
 	tally := 0
-	for _, validUpdate := range invalidUpdates {
-		correctedUpdate := CorrectOrdering(validUpdate, rules)
-		tally += correctedUpdate[len(validUpdate)/2]
+	for i, update := range invalidUpdates {
+		fmt.Println("------------------------------", i, "---------------------------")
+		correctedUpdate := CorrectOrdering(update, rules)
+		tally += correctedUpdate[len(correctedUpdate)/2]
 	}
 	fmt.Println(tally)
 }
 
 func CorrectOrdering(update []int, rules []OrderingRule) []int {
-	prevItems := []int{update[0]}
+	fmt.Println("CORRECTING: ", update)
+	prevItems := []int{}
 	grX := groupRulesByX(rules)
-	for i := 1; i < len(update)-1; i++ {
-		item := update[i]
-		if existingRules, ok := grX[item]; ok {
-			for _, v := range existingRules {
-				if slices.Contains(prevItems, v) {
-					idx := slices.Index(update, v)
-					fmt.Printf("%d MUST come before %d at index %d\n", item, update[idx], idx)
-					fmt.Println(update)
-					fmt.Println(item, grX[item])
+	fmt.Println(update)
+	for isValidUpdateLine(update, grX) == false {
+		for i := 0; i < len(update); i++ {
+			item := update[i]
+			reset := false
+			if existingRules, ok := grX[item]; ok {
+				for _, v := range existingRules {
+					if slices.Contains(prevItems, v) {
+						idx := slices.Index(update, v)
+						fmt.Printf("%d(idx %d) <== %d(idx %d)\n", item, idx, update[idx], i)
+						// fmt.Printf("%d MUST come before %d at index %d, delete at index %d\n", item, update[idx], idx, i)
+						// fmt.Println("PREV: ", prevItems)
+						update = slices.Delete(update, i, i+1)
+						update = slices.Insert(update, idx, item)
+						reset = true
+					}
+					if reset {
+						prevItems = []int{}
+						i = 0
+						break
+					}
 				}
 			}
+			prevItems = append(prevItems, item)
 		}
 	}
+	fmt.Println("CORRECTED: ", update)
 	return update
+
 }
 
 func isValidUpdateLine(update []int, grX map[int][]int) bool {
