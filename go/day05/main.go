@@ -16,8 +16,12 @@ type OrderingRule struct {
 }
 
 func main() {
+	Part2()
+}
+
+func Part2() {
 	// rules, updates, err := ReadInput("./test_input.txt")
-	rules, updates, err := ReadInput("./input.txt")
+	rules, updates, err := ReadInput("./test_input.txt")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -25,18 +29,39 @@ func main() {
 
 	grX := groupRulesByX(rules)
 
-	validUpdates := make([][]int, 0)
+	invalidUpdates := make([][]int, 0)
 	for _, update := range updates {
 		validUpdate := isValidUpdateLine(update, grX)
-		if validUpdate {
-			validUpdates = append(validUpdates, update)
+		if !validUpdate {
+			invalidUpdates = append(invalidUpdates, update)
 		}
 	}
+
 	tally := 0
-	for _, validUpdate := range validUpdates {
-		tally += validUpdate[len(validUpdate)/2]
+	for _, validUpdate := range invalidUpdates {
+		correctedUpdate := CorrectOrdering(validUpdate, rules)
+		tally += correctedUpdate[len(validUpdate)/2]
 	}
 	fmt.Println(tally)
+}
+
+func CorrectOrdering(update []int, rules []OrderingRule) []int {
+	prevItems := []int{update[0]}
+	grX := groupRulesByX(rules)
+	for i := 1; i < len(update)-1; i++ {
+		item := update[i]
+		if existingRules, ok := grX[item]; ok {
+			for _, v := range existingRules {
+				if slices.Contains(prevItems, v) {
+					idx := slices.Index(update, v)
+					fmt.Printf("%d MUST come before %d at index %d\n", item, update[idx], idx)
+					fmt.Println(update)
+					fmt.Println(item, grX[item])
+				}
+			}
+		}
+	}
+	return update
 }
 
 func isValidUpdateLine(update []int, grX map[int][]int) bool {
@@ -118,4 +143,28 @@ func ReadInput(path string) ([]OrderingRule, [][]int, error) {
 		updates = append(updates, intRuleSplit)
 	}
 	return rules, updates, nil
+}
+
+func Part1() {
+	// rules, updates, err := ReadInput("./test_input.txt")
+	rules, updates, err := ReadInput("./input.txt")
+	if err != nil {
+		log.Fatal(err)
+	}
+	// fmt.Println(rules)
+
+	grX := groupRulesByX(rules)
+
+	validUpdates := make([][]int, 0)
+	for _, update := range updates {
+		validUpdate := isValidUpdateLine(update, grX)
+		if validUpdate {
+			validUpdates = append(validUpdates, update)
+		}
+	}
+	tally := 0
+	for _, validUpdate := range validUpdates {
+		tally += validUpdate[len(validUpdate)/2]
+	}
+	fmt.Println(tally)
 }
